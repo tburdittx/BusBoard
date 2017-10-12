@@ -15,10 +15,10 @@ namespace BusBoard.ConsoleApp
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Please enter a stop code.");
-            var userInput = Console.ReadLine();
+            // Console.WriteLine("Please enter a stop code.");
+            var userInput = "490008660N";
+
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-            Location location = new Location();
             var client = new RestClient();
             client.BaseUrl = new Uri("https://api.tfl.gov.uk/");
             var request = new RestRequest("resource?auth_token={userInput}", Method.GET);
@@ -26,6 +26,26 @@ namespace BusBoard.ConsoleApp
             request.Resource = "StopPoint/{userInput}/Arrivals?app_id=451e3d76&app_key=e34ecaee185f5709d397ad5533afeb4f";
             IRestResponse response = client.Execute(request);
 
+            List<Bus> buses = JsonConvert.DeserializeObject<List<Bus>>(response.Content);
+            List<Bus> SortedList = buses.OrderBy(b => Convert.ToInt32(b.TimeToStation)).ToList();
+            List<Bus> firstFive = SortedList.GetRange(0, 5);
+
+            foreach (var bus in firstFive)
+            {
+                int timeToStation = Convert.ToInt32(bus.TimeToStation) / 60;
+
+                Console.WriteLine(string.Format("Line ID: {0}, Time to Station: {1} minutes, Destination: {2}", bus.LineID, timeToStation, bus.DestinationName));
+            }
+
+            Console.WriteLine("Please enter postcode");
+            var postcode = Console.ReadLine();
+
+            var client2 = new RestClient();
+            client2.BaseUrl = new Uri("https://api.postcodes.io");
+            var request2 = new RestRequest("resource?auth_token={postcode}", Method.GET);
+            request2.AddParameter("postcode", postcode, ParameterType.UrlSegment);
+            request2.Resource = "/postcodes/{postcode}";
+            IRestResponse response2 = client2.Execute(request2);
 
 
 
@@ -34,24 +54,34 @@ namespace BusBoard.ConsoleApp
             //    var data = JsonConvert.DeserializeObject<Data>(result.ToString());
             //    Console.WriteLine(data.CommonName);
             //
-            List<Bus> buses = JsonConvert.DeserializeObject<List<Bus>>(response.Content);
-            List<Bus> SortedList = buses.OrderBy(b => Convert.ToInt32(b.TimeToStation)).ToList();
-            List<Bus> firstFive = SortedList.GetRange(0, 5);
-            
 
-            foreach (var bus in firstFive)
+
+            Wrapper wrapper = JsonConvert.DeserializeObject<Wrapper>(response2.Content);
+
+            var client3 = new RestClient();
+            client3.BaseUrl = new Uri("https://api.tfl.gov.uk/");
+            var request3 = new RestRequest("resource?auth_token={userInput}", Method.GET);
+            var userInputLon = wrapper.Result.Longitude;
+            var userInputLat = wrapper.Result.Latitude;
+            request3.AddParameter("userInputLon", userInputLon, ParameterType.UrlSegment);
+            request3.AddParameter("userInputLat", userInputLat, ParameterType.UrlSegment);
+            request3.Resource = "StopPoint?stopTypes=NaptanPublicBusCoachTram&radius=500&useStopPointHierarchy=true&modes=bus&returnLines=true&lat={userInputLat}&lon={userInputLon}&app_id=451e3d76&app_key=e34ecaee185f5709d397ad5533afeb4f";
+            IRestResponse response3 = client3.Execute(request3);
+            StopPointWrapper stopPointWrapper = JsonConvert.DeserializeObject<StopPointWrapper>(response3.Content);
+            List<Stopcodes> lst = stopPointWrapper.StopPoints.GetRange(0, 2);
+            
+            foreach (var stoppoint in lst)
             {
-                int timeToStation = Convert.ToInt32(bus.TimeToStation) / 60;
-                
-                Console.WriteLine(string.Format("Line ID: {0}, Time to Station: {1} minutes, Destination: {2}",bus.LineID, timeToStation, bus.DestinationName));
+                Console.WriteLine(stoppoint.id);
             }
 
-           
+
+
+
 
 
 
             Console.ReadLine();
-
         }
     }
 }
