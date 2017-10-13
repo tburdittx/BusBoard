@@ -18,13 +18,7 @@ namespace BusBoard.ConsoleApp
             var userInput = "490008660N";
 
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-            var client = new RestClient();
-            client.BaseUrl = new Uri("https://api.tfl.gov.uk/");
-            var request = new RestRequest("resource?auth_token={userInput}", Method.GET);
-            request.AddParameter("userInput", userInput, ParameterType.UrlSegment);
-            request.Resource = "StopPoint/{userInput}/Arrivals?app_id=451e3d76&app_key=e34ecaee185f5709d397ad5533afeb4f";
-            IRestResponse response = client.Execute(request);
-            
+
             Console.WriteLine("Please enter postcode");
             var postcode = Console.ReadLine();
 
@@ -52,12 +46,19 @@ namespace BusBoard.ConsoleApp
             foreach (var stoppoint in lst)
             {
                 userInput = stoppoint.id;
+                var client = new RestClient();
+                client.BaseUrl = new Uri("https://api.tfl.gov.uk/");
+                var request = new RestRequest("resource?auth_token={userInput}", Method.GET);
+                request.AddParameter("userInput", userInput, ParameterType.UrlSegment);
+                request.Resource = "StopPoint/{userInput}/Arrivals?app_id=451e3d76&app_key=e34ecaee185f5709d397ad5533afeb4f";
+                IRestResponse response = client.Execute(request);
+
                 List<Bus> buses = JsonConvert.DeserializeObject<List<Bus>>(response.Content);
                 List<Bus> SortedList = buses.OrderBy(b => Convert.ToInt32(b.TimeToStation)).ToList();
-                List<Bus> firstFive = SortedList.GetRange(0, 5);
+                //List<Bus> firstFive = SortedList.GetRange(0, 5);
                 Console.WriteLine(stoppoint.id);
 
-                foreach (var bus in firstFive)
+                foreach (var bus in SortedList)
                 {
                     int timeToStation = Convert.ToInt32(bus.TimeToStation) / 60;
 
