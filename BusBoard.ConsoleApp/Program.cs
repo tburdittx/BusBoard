@@ -24,9 +24,7 @@ namespace BusBoard.ConsoleApp
             request.AddParameter("userInput", userInput, ParameterType.UrlSegment);
             request.Resource = "StopPoint/{userInput}/Arrivals?app_id=451e3d76&app_key=e34ecaee185f5709d397ad5533afeb4f";
             IRestResponse response = client.Execute(request);
-
-
-
+            
             Console.WriteLine("Please enter postcode");
             var postcode = Console.ReadLine();
 
@@ -58,22 +56,14 @@ namespace BusBoard.ConsoleApp
                 List<Bus> SortedList = buses.OrderBy(b => Convert.ToInt32(b.TimeToStation)).ToList();
                 List<Bus> firstFive = SortedList.GetRange(0, 5);
                 Console.WriteLine(stoppoint.id);
+
                 foreach (var bus in firstFive)
                 {
                     int timeToStation = Convert.ToInt32(bus.TimeToStation) / 60;
 
                     Console.WriteLine(string.Format("Line ID: {0}, Time to Station: {1} minutes, Destination: {2}", bus.LineID, timeToStation, bus.DestinationName));
                 }
-
-
             }
-
-
-
-
-
-
-
             Console.ReadLine();
         }
     }
