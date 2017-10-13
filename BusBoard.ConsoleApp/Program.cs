@@ -15,7 +15,6 @@ namespace BusBoard.ConsoleApp
     {
         static void Main(string[] args)
         {
-            // Console.WriteLine("Please enter a stop code.");
             var userInput = "490008660N";
 
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
@@ -26,16 +25,7 @@ namespace BusBoard.ConsoleApp
             request.Resource = "StopPoint/{userInput}/Arrivals?app_id=451e3d76&app_key=e34ecaee185f5709d397ad5533afeb4f";
             IRestResponse response = client.Execute(request);
 
-            List<Bus> buses = JsonConvert.DeserializeObject<List<Bus>>(response.Content);
-            List<Bus> SortedList = buses.OrderBy(b => Convert.ToInt32(b.TimeToStation)).ToList();
-            List<Bus> firstFive = SortedList.GetRange(0, 5);
 
-            foreach (var bus in firstFive)
-            {
-                int timeToStation = Convert.ToInt32(bus.TimeToStation) / 60;
-
-                Console.WriteLine(string.Format("Line ID: {0}, Time to Station: {1} minutes, Destination: {2}", bus.LineID, timeToStation, bus.DestinationName));
-            }
 
             Console.WriteLine("Please enter postcode");
             var postcode = Console.ReadLine();
@@ -46,15 +36,6 @@ namespace BusBoard.ConsoleApp
             request2.AddParameter("postcode", postcode, ParameterType.UrlSegment);
             request2.Resource = "/postcodes/{postcode}";
             IRestResponse response2 = client2.Execute(request2);
-
-
-
-            //foreach (var result in queryResult.Content)
-            //{
-            //    var data = JsonConvert.DeserializeObject<Data>(result.ToString());
-            //    Console.WriteLine(data.CommonName);
-            //
-
 
             Wrapper wrapper = JsonConvert.DeserializeObject<Wrapper>(response2.Content);
 
@@ -69,10 +50,22 @@ namespace BusBoard.ConsoleApp
             IRestResponse response3 = client3.Execute(request3);
             StopPointWrapper stopPointWrapper = JsonConvert.DeserializeObject<StopPointWrapper>(response3.Content);
             List<Stopcodes> lst = stopPointWrapper.StopPoints.GetRange(0, 2);
-            
+
             foreach (var stoppoint in lst)
             {
+                userInput = stoppoint.id;
+                List<Bus> buses = JsonConvert.DeserializeObject<List<Bus>>(response.Content);
+                List<Bus> SortedList = buses.OrderBy(b => Convert.ToInt32(b.TimeToStation)).ToList();
+                List<Bus> firstFive = SortedList.GetRange(0, 5);
                 Console.WriteLine(stoppoint.id);
+                foreach (var bus in firstFive)
+                {
+                    int timeToStation = Convert.ToInt32(bus.TimeToStation) / 60;
+
+                    Console.WriteLine(string.Format("Line ID: {0}, Time to Station: {1} minutes, Destination: {2}", bus.LineID, timeToStation, bus.DestinationName));
+                }
+
+
             }
 
 
